@@ -1,69 +1,51 @@
 // const MidjourneyAPI = require('midjourney-api');
 // const midjourney = new MidjourneyAPI(baseUrl, apiKey, verbose);
 
+const fs = require('fs');
+const axios = require('axios');
+
 const baseUrl = 'https://api.midjourneyapi.io';
-const apiKey = 'e08acd94-e16a-4e87-b906-f2e0e5ad26fd';
+const apiKey = process.env.MIDJOURNEY_API_KEY;
 
 const prompt = 'a happy girl holding purple balloons on fire, 8k, --ar 3:2';
 
 (async () => {
 	// https://docs.midjourneyapi.io/midjourney-api/midjourney-api/imagine
-	const axios = require('axios');
 
 	let resultId;
 	{
-		const data = JSON.stringify({
-			// callbackURL: 'https://....', // Optional
-			prompt,
-		});
-
-		const config = {
-			method: 'post',
-			maxBodyLength: Infinity,
-			url: `${baseUrl}/imagine`,
-			headers: {
-				Authorization: apiKey,
-				'Content-Type': 'application/json',
+		const config = baseConfig(
+			{
+				// callbackURL: 'https://....', // Optional
+				prompt,
 			},
-			data,
-		};
-
+			'imagine'
+		);
 		const response = await axios.request(config);
-		// console.log('imagine', JSON.stringify(response.data));
+		// log('imagine', JSON.stringify(response.data));
 		resultId = response.data.resultId;
 	}
 
-	let imageUrl, isWaiting;
-	do {
-		const data = JSON.stringify({
-			resultId,
-		});
+	const imageUrl = await getResult(resultId, 'imageUrl');
+	log('imageUrl', imageUrl);
+	const filename = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
+	await downloadAndSaveImage(imageUrl, `out/${filename}`);
+	log(`wrote image out/${filename}`);
 
-		const config = {
-			method: 'post',
-			maxBodyLength: Infinity,
-			url: `${baseUrl}/result`,
-			headers: {
-				Authorization: apiKey,
-				'Content-Type': 'application/json',
+	{
+		const config = baseConfig(
+			{
+				image: fs.readFileSync(`out/${filename}`),
 			},
-			data,
-		};
-
+			'describe',
+			'multipart/form-data'
+		);
 		const response = await axios.request(config);
-		// console.log('result', JSON.stringify(response.data));
-		if (response.data.status) {
-			console.log('status:', response.data.status);
-			if (response.data.percentage) {
-				console.log(response.data.percentage + '%');
-			}
-		} else if (!isWaiting) {
-			console.log('waiting...');
-			isWaiting = true;
-		}
-		imageUrl = response.data.imageURL;
-	} while (!imageUrl);
-	console.log('imageUrl', imageUrl);
+		log('describe', JSON.stringify(response.data));
+		resultId = response.data.resultId;
+	}
+	const description = await getResult(resultId, 'content');
+	log('description', description);
 
 	// /**********  IMAGINE  ***********/
 
@@ -76,7 +58,7 @@ const prompt = 'a happy girl holding purple balloons on fire, 8k, --ar 3:2';
 	// let status, res1;
 	// do {
 	// 	res1 = await midjourney.getResult(req1.resultId);
-	// 	console.log('res1', res1);
+	// 	log('res1', res1);
 	// 	status = res1.status;
 	// } while (status == 'pending');
 
@@ -91,7 +73,7 @@ const prompt = 'a happy girl holding purple balloons on fire, 8k, --ar 3:2';
 
 	// // Get result
 	// const res2 = await midjourney.getResult(req2.resultId);
-	// console.log('res2', res2);
+	// log('res2', res2);
 	// process.exit();
 
 	// /**********  UPSCALE IMAGE #2 ***********/
@@ -117,7 +99,7 @@ const prompt = 'a happy girl holding purple balloons on fire, 8k, --ar 3:2';
 
 	// // Get result
 	// const res4 = await midjourney.getResult(req4.resultId);
-	// console.log('res4 ', res4);
+	// log('res4 ', res4);
 
 	// /**********  GET SEED OF THE FIRST COMMAND ***********/
 
@@ -169,6 +151,50 @@ const prompt = 'a happy girl holding purple balloons on fire, 8k, --ar 3:2';
 	// /**********  DESCRIBE AN IMAGE  ***********/
 })();
 
-function sleep(ms) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
+async function downloadAndSaveImage(url, imagePath) {
+	const response = await axios.get(url, { responseType: 'arraybuffer' });
+	fs.writeFileSync(imagePath, response.data);
+}
+
+function baseConfig(data, endpoint, contentType) {
+	return {
+		method: 'post',
+		maxBodyLength: Infinity,
+		headers: {
+			Authorization: apiKey,
+			'Content-Type': contentType || 'application/json',
+		},
+		data: JSON.stringify(data),
+		url: `${baseUrl}/${endpoint}`,
+	};
+}
+
+async function getResult(resultId, key) {
+	let isWaiting, result;
+	do {
+		const config = baseConfig(
+			{
+				resultId,
+			},
+			'result'
+		);
+		// log('config', config);
+		const response = await axios.request(config);
+		log('response', response.data);
+		if (response.data.status) {
+			log('status:', response.data.status);
+			if (response.data.percentage) {
+				log(response.data.percentage + '%');
+			}
+		} else if (!isWaiting) {
+			log('waiting...');
+			isWaiting = true;
+		}
+		result = response.data[key];
+	} while (!result);
+	return result;
+}
+
+function log(message1 = '', message2 = '') {
+	console.log(`${new Date().toISOString()} : ${message1}`, message2);
 }
