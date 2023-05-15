@@ -40,12 +40,15 @@ const prompt = 'a happy girl holding purple balloons on fire, 8k, --ar 3:2';
 
 	const outFilename =
 		filename.substring(0, filename.lastIndexOf('.')) + '-small.png';
-	await scaleImage(`out/${filename}`, `out/${outFilename}`);
+	await scaleImage(`out/${filename}`, `out/${outFilename}`, 100, 100);
 
 	{
 		const fileContent = fs.readFileSync(`out/${filename}`);
 		const formData = new FormData();
 		formData.append('file', fileContent, { filename });
+		// const config = baseConfig(formData.getHeaders(), 'describe', formData);
+		// const response = await axios.request(config);
+
 		const response = await axios.post(`${baseUrl}/describe`, formData, {
 			maxBodyLength: Infinity,
 			data: JSON.stringify({
