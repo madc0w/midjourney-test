@@ -3,6 +3,8 @@
 
 const fs = require('fs');
 const axios = require('axios');
+const FormData = require('form-data');
+const sharp = require('sharp');
 
 const baseUrl = 'https://api.midjourneyapi.io';
 const apiKey = process.env.MIDJOURNEY_API_KEY;
@@ -13,34 +15,48 @@ const prompt = 'a happy girl holding purple balloons on fire, 8k, --ar 3:2';
 	// https://docs.midjourneyapi.io/midjourney-api/midjourney-api/imagine
 
 	let resultId;
-	{
-		const config = baseConfig(
-			{
-				// callbackURL: 'https://....', // Optional
-				prompt,
-			},
-			'imagine'
-		);
-		const response = await axios.request(config);
-		// log('imagine', JSON.stringify(response.data));
-		resultId = response.data.resultId;
-	}
+	// {
+	// 	const config = baseConfig(
+	// 		{
+	// 			// callbackURL: 'https://....', // Optional
+	// 			prompt,
+	// 		},
+	// 		'imagine'
+	// 	);
+	// 	const response = await axios.request(config);
+	// 	// log('imagine', JSON.stringify(response.data));
+	// 	resultId = response.data.resultId;
+	// }
+	// log('resultId', resultId);
 
-	const imageUrl = await getResult(resultId, 'imageUrl');
-	log('imageUrl', imageUrl);
-	const filename = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
-	await downloadAndSaveImage(imageUrl, `out/${filename}`);
-	log(`wrote image out/${filename}`);
+	// const imageUrl = await getResult(resultId, 'imageURL');
+	// log('imageUrl', imageUrl);
+	// const filename = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
+	// await downloadAndSaveImage(imageUrl, `out/${filename}`);
+	// log(`wrote image out/${filename}`);
+
+	const filename =
+		'badygobylamy_a_happy_girl_holding_purple_balloons_on_fire_8k_7fa7b69b-a433-4726-9666-a8add08433ae.png';
+
+	const outFilename =
+		filename.substring(0, filename.lastIndexOf('.')) + '-small.png';
+	await scaleImage(`out/${filename}`, `out/${outFilename}`);
 
 	{
-		const config = baseConfig(
-			{
-				image: fs.readFileSync(`out/${filename}`),
+		const fileContent = fs.readFileSync(`out/${filename}`);
+		const formData = new FormData();
+		formData.append('file', fileContent, { filename });
+		const response = await axios.post(`${baseUrl}/describe`, formData, {
+			maxBodyLength: Infinity,
+			data: JSON.stringify({
+				image: fs.readFileSync(`out/${outFilename}`),
+			}),
+			headers: {
+				Authorization: apiKey,
+				...formData.getHeaders(),
 			},
-			'describe',
-			'multipart/form-data'
-		);
-		const response = await axios.request(config);
+		});
+
 		log('describe', JSON.stringify(response.data));
 		resultId = response.data.resultId;
 	}
@@ -156,13 +172,14 @@ async function downloadAndSaveImage(url, imagePath) {
 	fs.writeFileSync(imagePath, response.data);
 }
 
-function baseConfig(data, endpoint, contentType) {
+function baseConfig(data, endpoint, headers = {}) {
 	return {
 		method: 'post',
 		maxBodyLength: Infinity,
 		headers: {
 			Authorization: apiKey,
-			'Content-Type': contentType || 'application/json',
+			'Content-Type': 'application/json',
+			...headers,
 		},
 		data: JSON.stringify(data),
 		url: `${baseUrl}/${endpoint}`,
@@ -180,7 +197,7 @@ async function getResult(resultId, key) {
 		);
 		// log('config', config);
 		const response = await axios.request(config);
-		log('response', response.data);
+		// log('response', response.data);
 		if (response.data.status) {
 			log('status:', response.data.status);
 			if (response.data.percentage) {
@@ -197,4 +214,22 @@ async function getResult(resultId, key) {
 
 function log(message1 = '', message2 = '') {
 	console.log(`${new Date().toISOString()} : ${message1}`, message2);
+}
+
+async function scaleImage(inputPath, outputPath, width, height) {
+	const image = sharp(inputPath);
+	const metadata = await image.metadata();
+
+	// Calculate the scaling factor while maintaining the aspect ratio
+	const scaleFactor = Math.min(
+		width / metadata.width,
+		height / metadata.height
+	);
+
+	await image
+		.resize(
+			Math.round(metadata.width * scaleFactor),
+			Math.round(metadata.height * scaleFactor)
+		)
+		.toFile(outputPath);
 }
