@@ -24,7 +24,9 @@ const prompt = 'a happy girl holding purple balloons on fire, 8k, --ar 3:2';
 	// 		'imagine'
 	// 	);
 	// 	const response = await axios.request(config);
-	// 	// log('imagine', JSON.stringify(response.data));
+	// 	// log('imagine data', JSON.stringify(response.data));
+	// 	log('credits', JSON.stringify(response.headers['midapi-credits']));
+
 	// 	resultId = response.data.resultId;
 	// }
 	// log('resultId', resultId);
@@ -38,27 +40,40 @@ const prompt = 'a happy girl holding purple balloons on fire, 8k, --ar 3:2';
 	const filename =
 		'badygobylamy_a_happy_girl_holding_purple_balloons_on_fire_8k_7fa7b69b-a433-4726-9666-a8add08433ae.png';
 
-	const outFilename =
-		filename.substring(0, filename.lastIndexOf('.')) + '-small.png';
-	await scaleImage(`out/${filename}`, `out/${outFilename}`, 100, 100);
-
 	{
-		const fileContent = fs.readFileSync(`out/${filename}`);
-		const formData = new FormData();
-		formData.append('file', fileContent, { filename });
+		const outFilename =
+			filename.substring(0, filename.lastIndexOf('.')) + '-small.png';
+		await scaleImage(`out/${filename}`, `out/${outFilename}`, 100, 100);
+		const data = new FormData();
+		data.append('image', fs.createReadStream(`out/${outFilename}`), filename);
+		// data.append('callbackURL', 'https://....'); // Optional
+
+		const config = {
+			method: 'post',
+			maxBodyLength: Infinity,
+			url: `${baseUrl}/describe`,
+			headers: {
+				Authorization: apiKey,
+				...data.getHeaders(),
+			},
+			data,
+		};
+
+		const response = await axios.request(config);
+
 		// const config = baseConfig(formData.getHeaders(), 'describe', formData);
 		// const response = await axios.request(config);
 
-		const response = await axios.post(`${baseUrl}/describe`, formData, {
-			maxBodyLength: Infinity,
-			data: JSON.stringify({
-				image: fs.readFileSync(`out/${outFilename}`),
-			}),
-			headers: {
-				Authorization: apiKey,
-				...formData.getHeaders(),
-			},
-		});
+		// const response = await axios.post(`${baseUrl}/describe`, formData, {
+		// 	maxBodyLength: Infinity,
+		// 	data: JSON.stringify({
+		// 		image: fs.readFileSync(`out/${outFilename}`),
+		// 	}),
+		// 	headers: {
+		// 		Authorization: apiKey,
+		// 		...formData.getHeaders(),
+		// 	},
+		// });
 
 		log('describe', JSON.stringify(response.data));
 		resultId = response.data.resultId;
@@ -190,7 +205,7 @@ function baseConfig(data, endpoint, headers = {}) {
 }
 
 async function getResult(resultId, key) {
-	let isWaiting, result;
+	let isWaiting, result, credits;
 	do {
 		const config = baseConfig(
 			{
@@ -211,7 +226,9 @@ async function getResult(resultId, key) {
 			isWaiting = true;
 		}
 		result = response.data[key];
+		credits = response.headers['midapi-credits'];
 	} while (!result);
+	log('remaining credits:', credits);
 	return result;
 }
 
