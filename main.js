@@ -1,6 +1,8 @@
+let prompt = 'guinea pigs sitting on giant mushroom --ar 3:2';
+const numIterations = 16;
+
 // const MidjourneyAPI = require('midjourney-api');
 // const midjourney = new MidjourneyAPI(baseUrl, apiKey, verbose);
-
 const fs = require('fs');
 const axios = require('axios');
 const FormData = require('form-data');
@@ -9,12 +11,11 @@ const sharp = require('sharp');
 const baseUrl = 'https://api.midjourneyapi.io';
 const apiKey = process.env.MIDJOURNEY_API_KEY;
 
-let prompt = 'happy girl holding cute guinea pig --ar 3:2';
-
 (async () => {
 	// https://docs.midjourneyapi.io/midjourney-api/midjourney-api/imagine
 
-	for (let i = 0; i < 8; i++) {
+	for (let i = 0; i < numIterations; i++) {
+		prompt = prompt.replace(/ --ar \d+:\d+/, ' --ar 3:2');
 		log(`prompt ${i}:`, prompt);
 		let resultId;
 		{
@@ -40,11 +41,14 @@ let prompt = 'happy girl holding cute guinea pig --ar 3:2';
 		await downloadAndSaveImage(imageUrl, `out/${filename}`);
 		// log(`wrote image out/${filename}`);
 
+		const jobId = imagineResult.jobId.includes('.')
+			? imagineResult.jobId.substring(0, imagineResult.jobId.lastIndexOf('.'))
+			: imagineResult.jobId;
 		{
 			const config = baseConfig(
 				{
 					messageId: imagineResult.messageId,
-					jobId: imagineResult.jobId,
+					jobId,
 					position: 1,
 				},
 				'upscale'
@@ -54,15 +58,25 @@ let prompt = 'happy girl holding cute guinea pig --ar 3:2';
 			resultId = response.data.resultId;
 		}
 		const upscaledImageUrl = (await getResult(resultId)).imageURL;
+		let numStr = (i + 1).toString();
+		while (numStr.length < 3) {
+			numStr = '0' + numStr;
+		}
 		const upscaledFilename =
-			filename.substring(0, filename.lastIndexOf('.')) + '-upscale.png';
-		await downloadAndSaveImage(upscaledImageUrl, `out/${upscaledFilename}`);
+			numStr +
+			' - ' +
+			filename.substring(0, filename.lastIndexOf('.')) +
+			'-upscale.png';
+		await downloadAndSaveImage(
+			upscaledImageUrl,
+			`out/upscaled/${upscaledFilename}`
+		);
 
 		{
 			const smallFilename =
 				filename.substring(0, filename.lastIndexOf('.')) + '-small.png';
 			await scaleImage(
-				`out/${upscaledFilename}`,
+				`out/upscaled/${upscaledFilename}`,
 				`out/${smallFilename}`,
 				400,
 				400
