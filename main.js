@@ -1,4 +1,4 @@
-let prompt = 'guinea pigs sitting on giant mushroom --ar 3:2';
+let prompt = 'something random --ar 3:2';
 const numIterations = 16;
 
 // const MidjourneyAPI = require('midjourney-api');
