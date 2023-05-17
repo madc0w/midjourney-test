@@ -14,9 +14,15 @@ const apiKey = process.env.MIDJOURNEY_API_KEY;
 (async () => {
 	// https://docs.midjourneyapi.io/midjourney-api/midjourney-api/imagine
 
+	const promptFilePath = `out/upscaled/prompts-${new Date().getTime()}.txt`;
 	for (let i = 0; i < numIterations; i++) {
 		prompt = prompt.replace(/ --ar \d+:\d+/, ' --ar 3:2');
 		log(`prompt ${i}:`, prompt);
+		fs.appendFileSync(promptFilePath, prompt + '\n', (err) => {
+			if (err) {
+				console.error(`error writing to ${promptFilePath}`, err);
+			}
+		});
 		let resultId;
 		{
 			const config = baseConfig(
@@ -122,7 +128,8 @@ function baseConfig(data, endpoint, headers = {}) {
 }
 
 async function getResult(resultId) {
-	let isWaiting, result, credits, prevStatus, prevProgress;
+	log('getResult resultId:', resultId);
+	let isWaiting, result, credits, status, progress;
 	do {
 		const config = baseConfig(
 			{
@@ -132,26 +139,27 @@ async function getResult(resultId) {
 		);
 		// log('config', config);
 		const response = await axios.request(config);
-		// log('response', response.data);
-		if (response.data.status) {
-			if (prevStatus != response.data.status) {
-				prevStatus = response.data.status;
-				log('status:', response.data.status);
+		result = response.data;
+		// log('result', result);
+		if (result.status) {
+			if (status != result.status) {
+				status = result.status;
+				log('status:', result.status);
+				if (status == 'failed') {
+					log('failed response:', result);
+					throw new Error('failed response');
+				}
 			}
-			if (
-				response.data.percentage &&
-				prevProgress != response.data.percentage
-			) {
-				prevProgress = response.data.percentage;
-				log(response.data.percentage + '%');
+			if (result.percentage && progress != result.percentage) {
+				progress = result.percentage;
+				log(result.percentage + '%');
 			}
 		} else if (!isWaiting) {
 			log('waiting...');
 			isWaiting = true;
 		}
-		result = response.data;
 		credits = response.headers['midapi-credits'];
-	} while (prevStatus != 'completed');
+	} while (status != 'completed' && !result?.content);
 	log('remaining credits:', credits);
 	return result;
 }
