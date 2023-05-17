@@ -1,4 +1,4 @@
-let prompt = 'something random --ar 3:2';
+let prompt = 'something amazing --ar 3:2';
 const numIterations = 16;
 
 // const MidjourneyAPI = require('midjourney-api');
@@ -129,7 +129,7 @@ function baseConfig(data, endpoint, headers = {}) {
 }
 
 async function getResult(resultId) {
-	log('getResult resultId:', resultId);
+	log('resultId:', resultId);
 	let isWaiting, result, credits, status, progress;
 	do {
 		const config = baseConfig(
