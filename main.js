@@ -10,6 +10,7 @@ const sharp = require('sharp');
 
 const baseUrl = 'https://api.midjourneyapi.io';
 const apiKey = process.env.MIDJOURNEY_API_KEY;
+let initCredits;
 
 (async () => {
 	// https://docs.midjourneyapi.io/midjourney-api/midjourney-api/imagine
@@ -161,6 +162,11 @@ async function getResult(resultId) {
 		credits = response.headers['midapi-credits'];
 	} while (status != 'completed' && !result?.content);
 	log('remaining credits:', credits);
+	if (initCredits) {
+		log('spent credits:', initCredits - credits);
+	} else {
+		initCredits = credits;
+	}
 	return result;
 }
 
