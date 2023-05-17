@@ -1,0 +1,3 @@
+something random --ar 3:2
+twisted wire frame 3d sphere animation video games, in the style of rendered in unreal engine, [subodh gupta](https://goo.gl/search?artist%20subodh%20gupta), [ursula von rydingsvard](https://goo.gl/search?artist%20ursula%20von%20rydingsvard), mechanical realism, rough textures, depth of field, harsh realism --ar 3:2
+many steel balls covered in wires sitting inside an empty room, in the style of surrealist botanical, rendered in unreal engine, [ursula von rydingsvard](https://goo.gl/search?artist%20ursula%20von%20rydingsvard), detailed hyperrealism, monochromatic realism, made of vines, single object --ar 3:2

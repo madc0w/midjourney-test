@@ -1,0 +1,4 @@
+something random --ar 3:2
+a house with a red balloon on a hill, in the style of emotive surreal character studies, high detailed, cryengine, marine painter, inventive character designs, distressed materials, vibrant illustrations --ar 3:2
+an old house is sitting on top of an orange balloon, in the style of vray, [dima dmitriev](https://goo.gl/search?artist%20dima%20dmitriev), [jeff soto](https://goo.gl/search?artist%20jeff%20soto), [alexandr averin](https://goo.gl/search?artist%20alexandr%20averin), red and cyan, primitive simplicity, rough --ar 3:2
+an old abandoned house and orange balloons flying in the sky, in the style of [reylia slaby](https://goo.gl/search?artist%20reylia%20slaby), surreal 3d landscapes, [igor kieryluk](https://goo.gl/search?artist%20igor%20kieryluk), dark orange and light cyan, photo-realistic landscapes, whimsical form, decaying landscapes --ar 3:2

@@ -1,3 +1,1 @@
-something random --ar 3:2
-girl with red hair in a mushroom covered forest, in the style of realistic color palette, intricate underwater worlds, gigantic scale, bold, manga-inspired characters, pensive stillness, subtle color palette, vibrant palette --ar 3:2
-a girl holding an orange head with mushrooms in her hair, in the style of [ross tran](https://goo.gl/search?artist%20ross%20tran), [michael whelan](https://goo.gl/search?artist%20michael%20whelan), moody color schemes, [michael malm](https://goo.gl/search?artist%20michael%20malm), multi-layered narrative scenes, light emerald and crimson, lush and detailed --ar 3:2
+a woman with an orange cloak and mushrooms, in the style of meticulous portraiture, [j yang](https://goo.gl/search?artist%20j%20yang), halloween, [kinuko y. craft](https://goo.gl/search?artist%20kinuko%20y.%20craft), [russell dongjun lu](https://goo.gl/search?artist%20russell%20dongjun%20lu), chromatic purity, monochromatic scheme --ar 3:2
