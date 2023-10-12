@@ -8,6 +8,7 @@ const axios = require('axios');
 const FormData = require('form-data');
 const sharp = require('sharp');
 
+// see https://docs.midjourneyapi.io/midjourney-api/
 const baseUrl = 'https://api.midjourneyapi.io';
 const apiKey = process.env.MIDJOURNEY_API_KEY;
 let initCredits;

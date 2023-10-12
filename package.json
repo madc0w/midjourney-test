@@ -3,9 +3,11 @@
     "@aws-sdk/client-s3": "^3.332.0",
     "aws-sdk": "^2.1379.0",
     "axios": "^1.4.0",
+    "discord.js": "^14.13.0",
     "form-data": "^4.0.0",
     "fs": "^0.0.1-security",
     "midjourney-api": "^1.0.3",
+    "openai": "^4.11.1",
     "sharp": "^0.32.1"
   }
 }
