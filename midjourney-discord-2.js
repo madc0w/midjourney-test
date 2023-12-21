@@ -1,6 +1,7 @@
 // see https://dev.to/useapi/interact-with-midjourney-using-discord-api-3k3e
 
 const axios = require('axios');
+// const { Client, GatewayIntentBits, ChannelType } = require('discord.js');
 
 const prompt = 'cats eating cheese';
 const discordToken = process.env.DISCORD_TOKEN;
@@ -9,7 +10,50 @@ const serverId = '1159876170100256778';
 const accessToken = '';
 
 (async () => {
+	// console.log('ChannelType', ChannelType);
+	// console.log('ChannelType.GuildText', ChannelType.GuildText);
+
 	// await sleep(20000);
+
+	// const client = new Client({
+	// 	intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+	// });
+
+	// client.on('ready', async () => {
+	// 	console.log(`Bot is ready as: ${client.user.tag}`);
+	// 	// console.log('client.channels', client.channels);
+
+	// 	client.channels.cache.map((channel) => {
+	// 		console.log(channel);
+	// 		if (
+	// 			channel.type == ChannelType.GuildText &&
+	// 			channel.permissionsFor(client.user).has('SEND_MESSAGES')
+	// 		) {
+	// 			channel.send('here I is!');
+	// 		}
+	// 	});
+
+	// 	// Registering the command with Discord
+	// 	// Replace 'server-id' with your server id
+	// 	const guild = await client.guilds.cache.get(serverId);
+	// 	await guild.commands.create({
+	// 		name: 'imagine',
+	// 		description: 'MJ imagine',
+	// 	});
+	// });
+
+	// client.on('messageCreate', (msg) => {
+	// 	console.log('message', msg);
+	// 	// if (msg.content === '!hello') {
+	// 	msg.channel.send('midjourney-bot here to save the day.');
+	// 	// }
+	// });
+
+	// // Always last: your bot token
+	// client.login(discordToken);
+
+	// await sleep(120 * 1000);
+	// return;
 
 	// // do token exchange dance
 	// // https://discord.com/developers/docs/topics/oauth2#authorization-code-grant-refresh-token-exchange-example
@@ -76,16 +120,20 @@ const accessToken = '';
 		headers,
 		url: `https://discord.com/api/v10/channels/${channelId}/application-commands/search?type=1&include_applications=true&query=imagine`,
 	});
-	console.log(searchResponse);
-	return;
+	// console.log(searchResponse);
 
-	const applicationId =
-		searchResponse.data.application_commands[0].application_id;
-	const version = searchResponse.data.application_commands[0].version;
-	const commandId = searchResponse.data.application_commands[0].id;
-	// console.log('applicationId', applicationId);
-	// console.log('version', version);
-	// console.log('commandId', commandId);
+	const applicationId = searchResponse.data.applications.find(
+		(a) => a.name == 'Midjourney Bot'
+	).id;
+	const command = searchResponse.data.application_commands.find(
+		(ac) => ac.application_id == applicationId
+	);
+	const version = command.version;
+	const commandId = command.id;
+
+	console.log('applicationId', applicationId);
+	console.log('version', version);
+	console.log('commandId', commandId);
 
 	const sessionId = Math.floor(Math.random() * 1e12);
 	const imagineResponse = await axios({
@@ -139,7 +187,7 @@ const accessToken = '';
 			},
 		},
 	});
-	// console.log('imagine response', imagineResponse.status);
+	console.log('imagine response', imagineResponse.status);
 
 	// HTTP 204 means "no response", which is correct
 	if (imagineResponse.status == 204) {
